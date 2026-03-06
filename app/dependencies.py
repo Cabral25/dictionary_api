@@ -10,7 +10,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
 
 
 def get_db():
-    db = SessionLocal()
+    """
+        Gerencia o ciclo de vida da sessão do banco. Quando a requisição 
+        termina (com sucesso ou erro), o finally executa db.close().
+    """
+    db = SessionLocal() # Cria a sessão
     try:
         yield db
     finally:
@@ -19,7 +23,7 @@ def get_db():
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    user = db.query(User).filter(User.id == payload['sub']).first()
+    user = db.query(User).filter(User.id == payload['sub']).first() # <-- first? first what?
     if not user:
         raise HTTPException(status_code=401)
     return user

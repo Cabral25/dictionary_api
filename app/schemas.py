@@ -7,6 +7,11 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserCreateOut(BaseModel):
+    username: str
+    email: str
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -23,4 +28,5 @@ class WordOut(BaseModel):
     meaning: str
 
     class DictConfig:
+        """What does this do?"""
         from_attributes = True
