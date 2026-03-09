@@ -22,6 +22,12 @@ class WordCreate(BaseModel):
     meaning: str
 
 
+class WordUpdate(BaseModel):
+    word: str
+    meaning: str
+    example: str
+
+
 class WordOut(BaseModel):
     word_id: int
     word: str
