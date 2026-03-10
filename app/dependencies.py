@@ -32,7 +32,7 @@ def get_db():
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    user = db.query(User).filter(User.id == payload['sub']).first() # <-- first? first what?
+    user = db.query(User).filter(User.user_id == payload['sub']).first() # <-- first? first what?
     if not user:
         raise HTTPException(status_code=401, detail='User not found')
     return user

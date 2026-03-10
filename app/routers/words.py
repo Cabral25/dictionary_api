@@ -18,7 +18,7 @@ router = APIRouter(prefix='/words')
     dependencies=[Depends(rate_limiter), Depends(get_current_user)]
 )
 def list_words(page: int = Query(1, gt=0), db: Session = Depends(get_db)):
-    limit = 10
+    limit = 2
     offset = (page - 1) * limit
     words = db.query(Word).offset(offset).limit(limit).all()
     return words
