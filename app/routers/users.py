@@ -8,10 +8,10 @@ from auth import hash_password, verify_password, create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 
 
-router = APIRouter()
+router = APIRouter(prefix='/users')
 
 
-@router.post('/register', tags=['Users'], response_model=List[UserCreateOut])
+@router.post('/register', tags=['Users'], response_model=UserCreateOut)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     """Endpoint para criar um novo usuário."""
     db_user = User(
@@ -21,7 +21,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     )
     db.add(db_user)
     db.commit()
-    return {'msg': 'user created'}
+    return db_user
 
 
 @router.post('/login', response_model=Token, tags=['Users'])

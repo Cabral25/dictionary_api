@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from passlib.context import CryptContext
+from pwdlib import PasswordHash
 from jose import jwt
 from dotenv import load_dotenv
 import os
@@ -10,15 +10,15 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 ALGORITHM = os.getenv('ALGORITHM')
 ACCESS_TOKENS_EXPIRE_MINUTES = os.getenv('ACCESS_TOKENS_EXPIRE_MINUTES')
 
-pwd_context = CryptContext(schemes=['bcrypt'])
+password_hash = PasswordHash.recommended()
 
 
 def hash_password(password: str):
-    return pwd_context.hash(password)
+    return password_hash.hash(password)
 
 
 def verify_password(password: str | bytes, hashed: str | bytes | None):
-    return pwd_context.verify(password, hashed)
+    return password_hash.verify(password, hashed)
 
 
 def create_access_token(data: dict):

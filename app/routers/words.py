@@ -36,7 +36,7 @@ def create_word(word: WordCreate, db: Session = Depends(get_db), user: User = De
     return {'msg': 'created'}
 
 
-@router.patch('/words/{word_id}', dependencies=[Depends(admin_required)], tags=['Words'])
+@router.patch('/{word_id}', dependencies=[Depends(admin_required)], tags=['Words'])
 def edit_word(word_id: int, word_data: WordUpdate, db: Session = Depends(get_db)):
     word = db.query(Word).filter(Word.word_id == word_id).first()
 
@@ -53,8 +53,9 @@ def edit_word(word_id: int, word_data: WordUpdate, db: Session = Depends(get_db)
     return word
 
 
-@router.delete('/words/{word_id}', dependencies=[Depends(admin_required)], tags=['Words'])
+@router.delete('/{word_id}', dependencies=[Depends(admin_required)], tags=['Words'])
 def delete_word(word_id: int, db: Session = Depends(get_db)):
+    """Delete a word"""
     word = db.query(Word).filter(Word.word_id == word_id).first()
 
     if not word:
