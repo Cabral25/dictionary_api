@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 class UserCreate(BaseModel):
@@ -21,6 +22,7 @@ class Token(BaseModel):
 class WordCreate(BaseModel):
     word: str
     meaning: str
+    example: str
 
 
 class WordUpdate(BaseModel):

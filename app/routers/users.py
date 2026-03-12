@@ -24,12 +24,12 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
-@router.post('/login', response_model=Token, tags=['Users'])
+@router.post('/login', tags=['Users'])
 def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """Endpoint para o login."""
     user = db.query(User).filter(User.username == form.username).first()
     if not user or not verify_password(form.password, user.password_hash):
         raise HTTPException(status_code=401, detail='Usuário ou senha incorretos.')
     
-    token = create_access_token({'sub': user.id})
+    token = create_access_token({'sub': str(user.user_id)})
     return {'access_token': token, 'token_type': 'bearer'}

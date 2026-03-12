@@ -23,6 +23,6 @@ def verify_password(password: str | bytes, hashed: str | bytes | None):
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKENS_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=float(ACCESS_TOKENS_EXPIRE_MINUTES))
     to_encode.update({'exp': expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
