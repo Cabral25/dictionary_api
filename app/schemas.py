@@ -12,6 +12,7 @@ class UserCreate(BaseModel):
 class UserCreateOut(BaseModel):
     username: str
     email: str
+    is_admin: bool = False
 
 
 class Token(BaseModel):

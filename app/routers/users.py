@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from sqlalchemy.orm import Session
 from models import User
@@ -11,13 +11,14 @@ from fastapi.security import OAuth2PasswordRequestForm
 router = APIRouter(prefix='/users')
 
 
-@router.post('/register', tags=['Users'], response_model=UserCreateOut)
+@router.post('/register', tags=['Users'], response_model=UserCreateOut, status_code=status.HTTP_201_CREATED)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     """Endpoint para criar um novo usuário."""
     db_user = User(
         username=user.username,
         email=user.email,
-        password_hash=hash_password(user.password)
+        password_hash=hash_password(user.password),
+        is_admin=user.is_admin
     )
     db.add(db_user)
     db.commit()

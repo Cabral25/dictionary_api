@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from typing import List
 from sqlalchemy.orm import Session
 from models import Word, User
@@ -11,20 +11,20 @@ router = APIRouter(prefix='/words')
 
 
 @router.get(
-    '/',
+    '/list_words/',
     response_model=List[WordOut],
     tags=['Words'],
     summary='Read a list of words',
-    dependencies=[Depends(rate_limiter), Depends(get_current_user)]
+    dependencies=[Depends(rate_limiter)]
 )
 def list_words(page: int = Query(1, gt=0), db: Session = Depends(get_db)):
-    limit = 2
+    limit = 5
     offset = (page - 1) * limit
     words = db.query(Word).offset(offset).limit(limit).all()
     return words
 
 
-@router.post('/', tags=['Words'])
+@router.post('/create_word/', tags=['Words'], status_code=status.HTTP_201_CREATED)
 def create_word(word: WordCreate, db: Session = Depends(get_db), user: User = Depends(admin_required)):
     word = Word(
         word=word.word,
@@ -36,7 +36,7 @@ def create_word(word: WordCreate, db: Session = Depends(get_db), user: User = De
     return {'msg': 'created'}
 
 
-@router.patch('/{word_id}', dependencies=[Depends(admin_required)], tags=['Words'])
+@router.patch('/edit/{word_id}', dependencies=[Depends(admin_required)], tags=['Words'])
 def edit_word(word_id: int, word_data: WordUpdate, db: Session = Depends(get_db)):
     word = db.query(Word).filter(Word.word_id == word_id).first()
 
@@ -53,7 +53,7 @@ def edit_word(word_id: int, word_data: WordUpdate, db: Session = Depends(get_db)
     return word
 
 
-@router.delete('/{word_id}', dependencies=[Depends(admin_required)], tags=['Words'])
+@router.delete('/delete/{word_id}', dependencies=[Depends(admin_required)], tags=['Words'], status_code=status.HTTP_204_NO_CONTENT)
 def delete_word(word_id: int, db: Session = Depends(get_db)):
     """Delete a word"""
     word = db.query(Word).filter(Word.word_id == word_id).first()
