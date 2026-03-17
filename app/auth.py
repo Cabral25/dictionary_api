@@ -8,7 +8,7 @@ import os
     pwdlib é uma biblioteca que implementa algoritmos
     seguros de hashing de senha. Cuida de coisas como:
 
-        🔷 salt automático
+        🔷 salt automático (valor aleatório adicionado à senha antes do hash)
         🔷 algoritmos seguros
         🔷 verificação de senha
         🔷 parâmetros de segurança
@@ -21,6 +21,45 @@ import os
         🔷 pbkdf2
 """
 
+
+"""
+    python-jose é o módulo usado para criar, validar e
+    decodificar tokens. Ele implementa padrões como:
+
+        ° JWT
+        ° JWS
+        ° criptografia
+"""
+
+"""
+    O que é JWT?
+
+        JWT siginifica JSON Web Token
+        É basicamente um token (string) que carrega informações
+        do usuário de forma segura. Exemplo:
+
+            eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+        Ele é composto de 3 partes:
+
+            HEADER.PAYLOAD.SIGNATURE
+
+        ° Payload (a parte importante). Exemplo:
+
+            {
+                'sub': '1', --> id do usuário
+                'exp': 17100000 --> data de expiração
+            }
+
+        ° Signature: é o que garante que ninguém pode
+          alterar o token
+
+    jwt é um módulo dentro do jose que tem funções como:
+
+        ° jwt.encode()
+        ° jwt.decode()
+"""
+
 load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -28,8 +67,8 @@ ALGORITHM = os.getenv('ALGORITHM')
 ACCESS_TOKENS_EXPIRE_MINUTES = os.getenv('ACCESS_TOKENS_EXPIRE_MINUTES')
 
 password_hash = PasswordHash.recommended()
-# Usa a configuração de hashing considerada segura atualmente
-# no caso do pwdlib, ele normalmente usa argon2id, que é um
+# Usa a configuração de hashing considerada segura atualmente.
+# No caso do pwdlib, ele normalmente usa argon2id, que é um
 # algoritmo moderno de hashing de senha
 
 
@@ -91,6 +130,14 @@ def verify_password(password: str | bytes, hashed: str | bytes | None):
 
 
 def create_access_token(data: dict):
+    """
+        Cria e retorna um token usado para identificar o usuário
+        sem precisar de sessão no servidor. Exemplo:
+
+            eyJhbGciOiJIUzI.eyJ0ZXN0ZSI6dzczNjg4OTEyfQ.kpHk_IfZGQEMoui4WO8cj
+                 ⬇                   ⬇                          ⬇
+               HEADER             PAYLOAD                   SIGNATURE
+    """
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=float(ACCESS_TOKENS_EXPIRE_MINUTES))
     to_encode.update({'exp': expire})
@@ -103,4 +150,4 @@ print(teste)
 
 testejwt = create_access_token({'teste': True})
 print(f'token gerado: {testejwt}')
-# eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZXN0ZSI6dHJ1ZSwiZXhwIjoxNzczNjg4OTEyfQ.kpHk_IfZGQEMoui4WO8cjqbAPdfd0QtSdVVY-5v6DZ8
+# token gerado: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZXN0ZSI6dHJ1ZSwiZXhwIjoxNzczNjg4OTEyfQ.kpHk_IfZGQEMoui4WO8cjqbAPdfd0QtSdVVY-5v6DZ8
