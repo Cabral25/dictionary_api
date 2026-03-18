@@ -48,7 +48,7 @@ import os
 
             {
                 'sub': '1', --> id do usuário
-                'exp': 17100000 --> data de expiração
+                'exp': 17100000 --> data de expiração do token
             }
 
         ° Signature: é o que garante que ninguém pode
@@ -58,12 +58,25 @@ import os
 
         ° jwt.encode()
         ° jwt.decode()
+
+    Funciona como um crachá:
+
+        ° sub ➡ quem é você
+        ° exp ➡ validade do crachá
+        ° SECRET_KEY ➡ selo oficial que impede falsificação
+        ° ALGORITM ➡ tipo do selo
 """
 
 load_dotenv()
 
+# Chave secreta usada para assinar o token (deve ser longa e aleatória);
+# protege o token
 SECRET_KEY = os.getenv('SECRET_KEY')
+# Algoritmo usado para assinar o token (usa a SECRET_KEY e uma função de hash segura),
+# definido para HS256 (HMAC + SHA256); define como proteger o token
 ALGORITHM = os.getenv('ALGORITHM')
+# Define a data/hora que o token expira (definido pra 30 minutos),
+# depois desse tempo ele o token se torna inválido; define até quando vale o token
 ACCESS_TOKENS_EXPIRE_MINUTES = os.getenv('ACCESS_TOKENS_EXPIRE_MINUTES')
 
 password_hash = PasswordHash.recommended()
@@ -137,6 +150,9 @@ def create_access_token(data: dict):
             eyJhbGciOiJIUzI.eyJ0ZXN0ZSI6dzczNjg4OTEyfQ.kpHk_IfZGQEMoui4WO8cj
                  ⬇                   ⬇                          ⬇
                HEADER             PAYLOAD                   SIGNATURE
+        
+        "Esses dados pertencem a esse usuário, foram assinados com
+        minha chave secreta e só são válidos até tal momento."
     """
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=float(ACCESS_TOKENS_EXPIRE_MINUTES))

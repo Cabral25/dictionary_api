@@ -6,6 +6,9 @@ from database import SessionLocal
 from models import User
 from auth import SECRET_KEY, ALGORITHM
 
+# o OAuth2PasswordBearer é um helper do fastapi que faz duas coisas:
+# ° Lê e retorna o token do header de requisição
+# ° Integra com o Swagger (botão Authorize)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/users/login')
 
 
@@ -32,7 +35,10 @@ def get_db():
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    user = db.query(User).filter(User.user_id == payload['sub']).first() # <-- first? first what?
+    # first retorna o primeiro resultado encontrado dessa consulta.
+    # Esse método aplica um limite de 1 ao SQL gerado
+    # Equivale a: SELECT * FROM users WHERE user_id = payload['sub'] LIMIT 1;
+    user = db.query(User).filter(User.user_id == payload['sub']).first()
     if not user:
         raise HTTPException(status_code=401, detail='User not found')
     return user
@@ -42,3 +48,10 @@ def admin_required(user: User = Depends(get_current_user)):
     if not user.is_admin:
         raise HTTPException(status_code=403, detail='Not authorized')
     return user
+
+
+def admin_required2(token: str = Depends(oauth2_scheme)):
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    if not payload['is_admin']:
+        raise HTTPException(status_code=403, detail='Not authorized')
+    return True
