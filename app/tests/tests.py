@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from main import app
+from fixtures import client
 
 
 # fixture
@@ -16,5 +17,5 @@ def client():
 
 
 def test_get_home(client: TestClient):
-    response = client.get('/')
+    response = client.get('/words/list_words')
     assert response.status_code == 200
