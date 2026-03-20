@@ -4,6 +4,9 @@ import os
 from dotenv import load_dotenv
 
 
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+
+
 load_dotenv()
 
 

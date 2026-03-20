@@ -26,9 +26,9 @@ import os
     python-jose é o módulo usado para criar, validar e
     decodificar tokens. Ele implementa padrões como:
 
-        ° JWT
-        ° JWS
-        ° criptografia
+        🔷 JWT
+        🔷 JWS
+        🔷 criptografia
 """
 
 """
@@ -44,27 +44,27 @@ import os
 
             HEADER.PAYLOAD.SIGNATURE
 
-        ° Payload (a parte importante). Exemplo:
+        🔷 Payload (a parte importante). Exemplo:
 
             {
                 'sub': '1', --> id do usuário
                 'exp': 17100000 --> data de expiração do token
             }
 
-        ° Signature: é o que garante que ninguém pode
+        🔷 Signature: é o que garante que ninguém pode
           alterar o token
 
     jwt é um módulo dentro do jose que tem funções como:
 
-        ° jwt.encode()
-        ° jwt.decode()
+        🔷 jwt.encode()
+        🔷 jwt.decode()
 
     Funciona como um crachá:
 
-        ° sub ➡ quem é você
-        ° exp ➡ validade do crachá
-        ° SECRET_KEY ➡ selo oficial que impede falsificação
-        ° ALGORITM ➡ tipo do selo
+        🔷 sub ➡ quem é você
+        🔷 exp ➡ validade do crachá
+        🔷 SECRET_KEY ➡ selo oficial que impede falsificação
+        🔷 ALGORITM ➡ tipo do selo
 """
 
 load_dotenv()

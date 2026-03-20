@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import declarative_base
-from config import engine, Base, TestingSessionLocal
+from app.tests.config import engine, Base, TestingSessionLocal
 from ..main import app
 from app.dependencies import get_db
 

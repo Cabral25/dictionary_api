@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy.orm import Session
 from models import Word, User
 from schemas import WordCreate, WordOut, WordUpdate
-from dependencies import get_db, admin_required, get_current_user
+from dependencies import get_db, admin_required
 from rate_limit import rate_limiter
 
 

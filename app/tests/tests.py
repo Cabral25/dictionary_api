@@ -1,16 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from fixtures import client
+from app.tests.conftest import client
 
 
 # fixture
 
 
-@pytest.fixture(scope='function')
-def client():
-    client = TestClient(app)
-    return client
+
 
 
 # Testes
