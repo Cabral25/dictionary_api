@@ -1,9 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import declarative_base
 from app.tests.config import engine, Base, TestingSessionLocal
 from ..main import app
 from app.dependencies import get_db
+# from database import Base
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -36,3 +36,12 @@ def client(db_session):
 
     client = TestClient(app)
     return client
+
+
+@pytest.fixture
+def admin_token(client: TestClient):
+    client.post(
+        '/users/register/', json={
+            'username': 'admin',
+        }
+    )
