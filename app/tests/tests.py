@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from app.tests.conftest import client
-from conftest import db_session
+from app.tests.conftest import db_session, create_words
 from models import Word
 from sqlalchemy.orm import Session
 
@@ -18,6 +18,13 @@ def test_get_words_list(client: TestClient):
     assert len(response.json()) == 5
 
 
-def test_pagination_page_1(client: TestClient, db_session: Session):
-    for i in range(10):
-        db_session.add(Word())
+def test_pagination_page_1(client: TestClient, create_words):
+    create_words(10)
+    response = client.get('/words/list_words/?page=1')
+    assert response.status_code == 200
+
+
+def test_pagination_page_2(client: TestClient, create_words):
+    create_words(10)
+    response = client.get('/words/list_words/?page=2')
+    assert response.status_code == 200
