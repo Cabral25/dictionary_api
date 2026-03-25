@@ -21,10 +21,15 @@ def test_get_words_list(client: TestClient):
 def test_pagination_page_1(client: TestClient, create_words):
     create_words(10)
     response = client.get('/words/list_words/?page=1')
+    print(response.json())
     assert response.status_code == 200
+    assert len(response.json()) == 3
 
 
 def test_pagination_page_2(client: TestClient, create_words):
     create_words(10)
     response = client.get('/words/list_words/?page=2')
+    print(response.json())
+    print(f'status code: {response.status_code}')
     assert response.status_code == 200
+    assert len(response.json()) == 5

@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from app.tests.config import engine, Base, TestingSessionLocal
 from ..main import app
 from app.dependencies import get_db
+from rate_limit import rate_limiter
 import uuid
 # from database import Base
 
@@ -23,9 +24,13 @@ def db_session():
 
     yield session
 
+    print('Closing session')
     session.close()
+    print('Destroying database data...')
     transaction.rollback()
+    print('Closing connection...')
     connection.close()
+    print('Done')
 
 
 @pytest.fixture
@@ -33,13 +38,17 @@ def client(db_session):
     def override_get_db():
         yield db_session
 
+    def override_rate_limiter():
+        return None
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[rate_limiter] = override_rate_limiter
 
     client = TestClient(app)
     return client
 
 
-@pytest.fixture
+@pytest.fixture # <-- need refactoring
 def admin_token(client: TestClient):
     unique = str(uuid.uuid4())
 
@@ -67,9 +76,9 @@ def admin_token(client: TestClient):
 
 @pytest.fixture
 def create_words(client: TestClient, admin_token):
-    def create(n):
+    def create(n: int):
         for i in range(n):
-            client.post(
+            res = client.post(
                 '/words/create_word/',
                 json={
                     'word': f'word{i}',
@@ -77,4 +86,5 @@ def create_words(client: TestClient, admin_token):
                 },
                 headers=admin_token
             )
+            print(f'word: {i}, status code: {res.status_code}, json: {res.json()}')
     return create
