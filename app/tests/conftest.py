@@ -5,6 +5,8 @@ from ..main import app
 from app.dependencies import get_db
 from rate_limit import rate_limiter
 import uuid
+from models import Word, User
+from sqlalchemy import event
 # from database import Base
 
 
@@ -22,6 +24,15 @@ def db_session():
 
     session = TestingSessionLocal(bind=connection)
 
+    # cria SAVEPOINT
+    session.begin_nested()
+
+    # garante que cada commit cria novo SAVEPOINT
+    @event.listens_for(session, 'after_transaction_end')
+    def restart_savepoint(sess, trans):
+        if not trans.nested:
+            sess.begin_nested()
+
     yield session
 
     print('Closing session')
@@ -33,8 +44,17 @@ def db_session():
     print('Done')
 
 
+@pytest.fixture(autouse=True)
+def clean_db(db_session):
+    print('url da engine:', engine.url)
+    db_session.query(Word).delete()
+    db_session.query(User).delete()
+    db_session.commit()
+
+
 @pytest.fixture
 def client(db_session):
+
     def override_get_db():
         yield db_session
 
@@ -45,10 +65,12 @@ def client(db_session):
     app.dependency_overrides[rate_limiter] = override_rate_limiter
 
     client = TestClient(app)
-    return client
+    yield client
+
+    app.dependency_overrides.clear()
 
 
-@pytest.fixture # <-- need refactoring
+@pytest.fixture # <-- needs refactoring
 def admin_token(client: TestClient):
     unique = str(uuid.uuid4())
 
@@ -77,14 +99,16 @@ def admin_token(client: TestClient):
 @pytest.fixture
 def create_words(client: TestClient, admin_token):
     def create(n: int):
-        for i in range(n):
+        for i in range(1, n + 1):
             res = client.post(
                 '/words/create_word/',
                 json={
-                    'word': f'word{i}',
+                    'word': f'_palavra{i}',
                     'meaning': 'test'
                 },
                 headers=admin_token
             )
             print(f'word: {i}, status code: {res.status_code}, json: {res.json()}')
+            assert res.status_code in (200, 201), res.json()
+            assert engine.url == 'postgresql://postgres:Postc%40pital25@localhost:5432/dictionary_api_tests'
     return create

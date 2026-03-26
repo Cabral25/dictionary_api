@@ -9,7 +9,7 @@ requests = {}
 
 
 async def rate_limiter(request: Request):
-    """Limita as requisicoes a 5 por minuto."""
+    """Limita as requisições a 5 por minuto."""
     ip = request.client.host
     now = time.time()
 

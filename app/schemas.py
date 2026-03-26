@@ -22,7 +22,7 @@ class Token(BaseModel):
 class WordCreate(BaseModel):
     word: str
     meaning: str
-    example: str
+    example: str = None
 
 
 class WordUpdate(BaseModel):
