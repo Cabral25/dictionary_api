@@ -36,8 +36,8 @@ def test_pagination_page_2(client: TestClient, create_words):
 
 
 def test_pagination_last_page(client: TestClient, create_words):
-    create_words(7)
-    response = client.get('/words/list_words/?page=2')
-    print(response.status_code, response.json())
+    create_words(8)
+    response = client.get('/words/list_words/?page=16')
+    print(response.status_code, response.json(), f'total de resultados: {len(response.json())}')
     assert response.status_code == 200
-    assert len(response.json()) == 2
+    assert len(response.json()) == 3

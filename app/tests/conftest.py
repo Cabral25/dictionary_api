@@ -1,25 +1,26 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.tests.config import engine, Base, TestingSessionLocal
+from app.tests.config import engine_test, Base, TestingSessionLocal
 from ..main import app
 from app.dependencies import get_db
 from rate_limit import rate_limiter
 import uuid
 from models import Word, User
-from sqlalchemy import event
+from sqlalchemy import event, text
 # from database import Base
 
 
 @pytest.fixture(scope='session', autouse=True)
 def create_table():
-    Base.metadata.create_all(bind=engine)
+    """Cria as tabelas no banco de dados"""
+    Base.metadata.create_all(bind=engine_test)
     yield
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=engine_test)
 
 
 @pytest.fixture
 def db_session():
-    connection = engine.connect()
+    connection = engine_test.connect()
     transaction = connection.begin()
 
     session = TestingSessionLocal(bind=connection)
@@ -46,9 +47,7 @@ def db_session():
 
 @pytest.fixture(autouse=True)
 def clean_db(db_session):
-    print('url da engine:', engine.url)
-    db_session.query(Word).delete()
-    db_session.query(User).delete()
+    db_session.execute(text('TRUNCATE TABLE words, users RESTART IDENTITY CASCADE;'))
     db_session.commit()
 
 
@@ -103,12 +102,11 @@ def create_words(client: TestClient, admin_token):
             res = client.post(
                 '/words/create_word/',
                 json={
-                    'word': f'_palavra{i}',
+                    'word': f'palavra_{i}º.',
                     'meaning': 'test'
                 },
                 headers=admin_token
             )
             print(f'word: {i}, status code: {res.status_code}, json: {res.json()}')
             assert res.status_code in (200, 201), res.json()
-            assert engine.url == 'postgresql://postgres:Postc%40pital25@localhost:5432/dictionary_api_tests'
     return create

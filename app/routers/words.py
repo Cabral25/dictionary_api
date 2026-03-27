@@ -32,7 +32,7 @@ def create_word(word: WordCreate, db: Session = Depends(get_db), user: User = De
         created_by=user.user_id
     )
     db.add(word)
-    db.commit()
+    # db.commit()
     return {'msg': 'created'}
 
 

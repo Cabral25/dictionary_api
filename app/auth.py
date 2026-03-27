@@ -64,7 +64,7 @@ import os
         🔷 sub ➡ quem é você
         🔷 exp ➡ validade do crachá
         🔷 SECRET_KEY ➡ selo oficial que impede falsificação
-        🔷 ALGORITM ➡ tipo do selo
+        🔷 ALGORITHM ➡ tipo do selo
 """
 
 load_dotenv()
@@ -76,7 +76,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # definido para HS256 (HMAC + SHA256); define como proteger o token
 ALGORITHM = os.getenv('ALGORITHM')
 # Define a data/hora que o token expira (definido pra 30 minutos),
-# depois desse tempo ele o token se torna inválido; define até quando vale o token
+# depois desse tempo, o token se torna inválido; define até quando vale o token
 ACCESS_TOKENS_EXPIRE_MINUTES = os.getenv('ACCESS_TOKENS_EXPIRE_MINUTES')
 
 password_hash = PasswordHash.recommended()
