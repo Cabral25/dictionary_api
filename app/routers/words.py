@@ -18,6 +18,8 @@ router = APIRouter(prefix='/words')
     dependencies=[Depends(rate_limiter)]
 )
 def list_words(page: int = Query(1, gt=0), db: Session = Depends(get_db)):
+    print('PRINT DA ENDPOINT LIST_WORDS ⬇')
+    print('Banco usado: ', db.bind.engine.url)
     limit = 5
     offset = (page - 1) * limit
     words = db.query(Word).order_by(Word.word_id).offset(offset).limit(limit).all()
@@ -32,8 +34,8 @@ def create_word(word: WordCreate, db: Session = Depends(get_db), user: User = De
         created_by=user.user_id
     )
     db.add(word)
-    # db.commit()
-    return {'msg': 'created'}
+    db.commit()
+    return {'msg': 'created', 'word_id': {word.word_id}}
 
 
 @router.patch('/edit/{word_id}', dependencies=[Depends(admin_required)], tags=['Words'])

@@ -1,21 +1,23 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.tests.config import engine_test, Base, TestingSessionLocal
+from .config import engine_test, TestingSessionLocal
 from ..main import app
-from app.dependencies import get_db
+from dependencies import get_db
 from rate_limit import rate_limiter
 import uuid
 from models import Word, User
 from sqlalchemy import event, text
-# from database import Base
+from database import Base
 
 
 @pytest.fixture(scope='session', autouse=True)
 def create_table():
     """Cria as tabelas no banco de dados"""
     Base.metadata.create_all(bind=engine_test)
+    print('As tabelas foram criadas')
     yield
     Base.metadata.drop_all(bind=engine_test)
+    print('As tabelas foram destruídas')
 
 
 @pytest.fixture
@@ -55,6 +57,8 @@ def clean_db(db_session):
 def client(db_session):
 
     def override_get_db():
+        print('Override ativo', end=', ')
+        print('Banco do db_session: ', db_session.bind.engine.url)
         yield db_session
 
     def override_rate_limiter():
@@ -88,8 +92,8 @@ def admin_token(client: TestClient):
 
     # login
     response = client.post('/users/login', data={'username': username, 'password': password, 'grant_type': 'password'})
-    print(response.status_code)
-    print(response.json())
+    # print(response.status_code)
+    # print(response.json())
     token = response.json()['access_token']
 
     return {'Authorization': f'Bearer {token}'}
@@ -98,15 +102,18 @@ def admin_token(client: TestClient):
 @pytest.fixture
 def create_words(client: TestClient, admin_token):
     def create(n: int):
+        
         for i in range(1, n + 1):
             res = client.post(
                 '/words/create_word/',
                 json={
-                    'word': f'palavra_{i}º.',
+                    'word': f'word_{i}º.',
                     'meaning': 'test'
                 },
                 headers=admin_token
             )
+            print('PRINT DA FIXTURE CREATE_WORDS ⬇')
             print(f'word: {i}, status code: {res.status_code}, json: {res.json()}')
             assert res.status_code in (200, 201), res.json()
+        print('url do banco:', engine_test.url)
     return create

@@ -1,8 +1,5 @@
 from fastapi.testclient import TestClient
-from app.tests.conftest import client
-from app.tests.conftest import db_session, create_words
-from models import Word
-from sqlalchemy.orm import Session
+from .conftest import client, admin_token
 
 
 
@@ -12,7 +9,8 @@ from sqlalchemy.orm import Session
 # Testes da endpoint list_words
 
 
-def test_get_words_list(client: TestClient):
+def test_get_words_list(client: TestClient, create_words):
+    create_words(5)
     response = client.get('/words/list_words')
     assert response.status_code == 200
     assert len(response.json()) == 5
@@ -23,7 +21,7 @@ def test_pagination_page_1(client: TestClient, create_words):
     response = client.get('/words/list_words/?page=1')
     print(response.json())
     assert response.status_code == 200
-    assert len(response.json()) == 3
+    assert len(response.json()) == 5
 
 
 def test_pagination_page_2(client: TestClient, create_words):
@@ -35,9 +33,29 @@ def test_pagination_page_2(client: TestClient, create_words):
     assert len(response.json()) == 5
 
 
-def test_pagination_last_page(client: TestClient, create_words):
+def test_pagination_last_page(client, create_words):
     create_words(8)
-    response = client.get('/words/list_words/?page=16')
+    response = client.get('/words/list_words/?page=2')
+    print('PRINT DO TESTE ⬇')
     print(response.status_code, response.json(), f'total de resultados: {len(response.json())}')
     assert response.status_code == 200
     assert len(response.json()) == 3
+
+
+def test_words_list_rate_limiter_works():
+    pass
+
+
+
+# Testes da endpoint create_word
+
+
+def test_get_create_word(client: TestClient, admin_token):
+    data = {
+        'word': 'word1',
+        'meaning': 'any meaning'
+    }
+    response = client.post('/words/create_word/', json=data, headers=admin_token)
+    print('PRINT DO TESTE TEST_GET_CREATE_WORD ⬇')
+    print(response.json())
+    assert response.status_code == 200
