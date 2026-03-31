@@ -1,9 +1,7 @@
 from fastapi.testclient import TestClient
-from .conftest import client, admin_token
+from .conftest import client, admin_token, admin_token_not_admin
+from models import Word
 
-
-
-# Testes
 
 
 # Testes da endpoint list_words
@@ -42,15 +40,29 @@ def test_pagination_last_page(client, create_words):
     assert len(response.json()) == 3
 
 
-def test_words_list_rate_limiter_works():
-    pass
+def test_invalid_page(client):
+    response = client.get('/words/list_words/?page=0')
+    assert response.status_code == 422
+
+
+def test_words_list_rate_limiter_works(client):
+    """"
+        Para o correto funcionamente deste teste, desabilite
+        o override de rate_limiter na fixture client.
+    """
+    for i in range(5):
+        response = client.get('/words/list_words/')
+        assert response.status_code == 200
+
+    response = client.get('/words/list_words/')
+    assert response.status_code == 429
 
 
 
 # Testes da endpoint create_word
 
 
-def test_get_create_word(client: TestClient, admin_token):
+def test_create_word_success(client: TestClient, admin_token):
     data = {
         'word': 'word1',
         'meaning': 'any meaning'
@@ -58,4 +70,56 @@ def test_get_create_word(client: TestClient, admin_token):
     response = client.post('/words/create_word/', json=data, headers=admin_token)
     print('PRINT DO TESTE TEST_GET_CREATE_WORD ⬇')
     print(response.json())
-    assert response.status_code == 200
+    assert response.status_code == 201
+    assert response.json() == {'msg': 'created', 'word_id': [1]}
+
+
+def test_create_word_user_not_authorized(client, admin_token_not_admin):
+    data = {
+        'word': 'word2',
+        'meaning': 'meaning'
+    }
+    response = client.post('/words/create_word/', json=data, headers=admin_token_not_admin)
+    print('PRINT DO TESTE TEST_CREATE_WORD_USER_NOT_AUTHORIZED ⬇')
+    print(response.json())
+    assert response.status_code == 403
+    assert response.json() == {'detail': 'Not authorized'}
+
+
+def test_create_word_without_token(client):
+    data = {
+        'word': 'word2',
+        'meaning': 'meaning'
+    }
+    response = client.post('/words/create_word/', json=data)
+    assert response.status_code == 401
+
+
+def test_create_word_invalid_data_missing_word(client, admin_token):
+    data = {
+        'meaning': 'meaning'
+    }
+    response = client.post('/words/create_word/', json=data, headers=admin_token)
+    print('PRINT DO TESTE test_create_word_invalid_data_missing_word ⬇')
+    print(response.json())
+    assert response.status_code == 422
+
+
+def test_create_word_duplicate_word(client, admin_token):
+    data = {
+        'word': 'duplicate',
+        'meaning': 'meaning'
+    }
+    for i in range(2):
+        response = client.post('/words/create_word/', json=data, headers=admin_token)
+
+    
+def test_create_word_with_example(client, admin_token):
+    data = {
+        'word': 'word_with_example',
+        'meaning': 'meaning',
+        'example': 'example text'
+    }
+    response = client.post('/words/create_word/', json=data, headers=admin_token)
+    assert response.status_code == 201
+    assert 'word_id' in response.json()
