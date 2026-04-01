@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
-from .conftest import client, admin_token, admin_token_not_admin
+from .conftest import client, admin_token, admin_token_not_admin, db_session, client_no_savepoint
 from models import Word
+import pytest
 
 
 
@@ -105,13 +106,18 @@ def test_create_word_invalid_data_missing_word(client, admin_token):
     assert response.status_code == 422
 
 
-def test_create_word_duplicate_word(client, admin_token):
+@pytest.mark.no_clean
+def test_create_word_duplicate_word(client_no_savepoint: TestClient, admin_token):
     data = {
         'word': 'duplicate',
         'meaning': 'meaning'
     }
-    for i in range(2):
-        response = client.post('/words/create_word/', json=data, headers=admin_token)
+    response1 = client_no_savepoint.post('/words/create_word/', json=data, headers=admin_token)
+    assert response1.status_code == 201
+
+    # Tentar duplicar
+    response2 = client_no_savepoint.post('/words/create_word/', json=data, headers=admin_token)
+    assert response2.status_code == 500
 
     
 def test_create_word_with_example(client, admin_token):
@@ -123,3 +129,33 @@ def test_create_word_with_example(client, admin_token):
     response = client.post('/words/create_word/', json=data, headers=admin_token)
     assert response.status_code == 201
     assert 'word_id' in response.json()
+
+
+def test_create_word_persisted_in_db(client, db_session, admin_token):
+    data = {
+        'word': 'word',
+        'meaning': 'meaning'
+    }
+    response = client.post('/words/create_word/', json=data, headers=admin_token)
+    assert response.status_code == 201
+
+    word = db_session.query(Word).filter(Word.word == 'word').first()
+    assert word is not None
+    assert word.meaning == 'meaning'
+    assert word.created_by is not None
+
+
+
+# Testes da endpoint edit_word
+
+
+def test_edit_word_success(client: TestClient, admin_token, db_session):
+    word = db_session.add(Word(
+        word='palavra',
+        meaning='...'
+    ))
+    data = {
+        'meaning': 'qualquer coisa'
+    }
+    response = client.patch(f'/words/edit/{word.word_id}', headers=admin_token, json=data)
+    assert response.status_code == 200
