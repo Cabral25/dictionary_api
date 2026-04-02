@@ -28,7 +28,7 @@ class WordCreate(BaseModel):
 class WordUpdate(BaseModel):
     word: str
     meaning: str
-    example: str
+    example: str = None
 
 
 class WordOut(BaseModel):

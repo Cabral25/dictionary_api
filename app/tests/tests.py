@@ -150,12 +150,165 @@ def test_create_word_persisted_in_db(client, db_session, admin_token):
 
 
 def test_edit_word_success(client: TestClient, admin_token, db_session):
-    word = db_session.add(Word(
-        word='palavra',
-        meaning='...'
-    ))
     data = {
+        'word': 'palavra',
         'meaning': 'qualquer coisa'
     }
-    response = client.patch(f'/words/edit/{word.word_id}', headers=admin_token, json=data)
+    create_response = client.post('/words/create_word/', json=data, headers=admin_token)
+    assert create_response.status_code == 201
+    word_id = create_response.json()['word_id'][0]
+
+    update_data = {
+        'word': 'palavra',
+        'meaning': 'significado atualizado',
+        'example': 'isso é uma palavra'
+    }
+    response = client.patch(f'/words/edit/{word_id}', json=update_data, headers=admin_token)
+    print('PRINT DO TESTE TEST_EDIT_WORD_SUCCESS ⬇')
+    print(response.status_code, response.json())
     assert response.status_code == 200
+    
+    update_word = db_session.query(Word).filter(Word.word_id == word_id).first()
+    assert update_word.meaning == 'significado atualizado'
+    assert update_word.word == 'palavra'
+    assert update_word.example == 'isso é uma palavra'
+
+
+def test_edit_word_not_authorized(client, admin_token_not_admin, admin_token, db_session):
+    data = {
+        'word': 'palavra',
+        'meaning': 'qualquer coisa'
+    }
+    create_response = client.post('/words/create_word/', json=data, headers=admin_token)
+    assert create_response.status_code == 201
+    word_id = create_response.json()['word_id'][0]
+
+    update_data = {
+        'word': 'palavra',
+        'meaning': 'significado atualizado',
+        'example': 'isso é uma palavra'
+    }
+    response = client.patch(f'/words/edit/{word_id}', json=update_data, headers=admin_token_not_admin)
+    word = db_session.query(Word).filter(Word.word_id == word_id).first()
+    print('PRINT DO TESTE TEST_EDIT_WORD_SUCCESS ⬇')
+    print(response.status_code, response.json())
+    assert response.status_code == 403
+    assert response.json() == {'detail': 'Not authorized'}
+    assert word.meaning != 'significado atualizado'
+    assert word.meaning == 'qualquer coisa'
+    assert word.example is None
+
+
+def test_edit_word_invalid_type(client, admin_token, db_session):
+    data = {
+        'word': 'palavra',
+        'meaning': 'qualquer coisa'
+    }
+    create_response = client.post('/words/create_word/', json=data, headers=admin_token)
+    assert create_response.status_code == 201
+    word_id = create_response.json()['word_id'][0]
+
+    update_data = {
+        'word': 2000,
+        'meaning': 'significado atualizado',
+        'example': 'isso é uma palavra'
+    }
+    response = client.patch(f'/words/edit/{word_id}', json=update_data, headers=admin_token)
+    word = db_session.query(Word).filter(Word.word_id == word_id).first()
+    print('PRINT DO TESTE TEST_EDIT_WORD_INVALID_TYPE ⬇')
+    print(response.status_code, response.json())
+    assert response.status_code == 422
+    assert response.json()['detail'][0]['msg'] == 'Input should be a valid string'
+    assert word.word == 'palavra'
+    assert word.meaning != 'significado atualizado'
+    assert word.meaning == 'qualquer coisa'
+    assert word.example is None
+
+
+def test_edit_word_null_values(client, admin_token, db_session):
+    data = {
+        'word': 'palavra',
+        'meaning': 'qualquer coisa'
+    }
+    create_response = client.post('/words/create_word/', json=data, headers=admin_token)
+    assert create_response.status_code == 201
+    word_id = create_response.json()['word_id'][0]
+
+    update_data = {
+        'word': None,
+        'meaning': None,
+        'example': 'isso é uma palavra'
+    }
+    response = client.patch(f'/words/edit/{word_id}', json=update_data, headers=admin_token)
+    word = db_session.query(Word).filter(Word.word_id == word_id).first()
+    print('PRINT DO TESTE TEST_EDIT_WORD_NULL_VALUES ⬇')
+    print(response.status_code, response.json())
+    assert response.status_code == 422
+    assert response.json()['detail'][0]['msg'] == 'Input should be a valid string'
+    assert response.json()['detail'][1]['msg'] == 'Input should be a valid string'
+    assert word.word == 'palavra'
+    assert word.meaning != 'significado atualizado'
+    assert word.meaning == 'qualquer coisa'
+    assert word.example is None
+
+
+def test_edit_word_missing_values(client, admin_token, db_session):
+    data = {
+        'word': 'palavra',
+        'meaning': 'qualquer coisa'
+    }
+    create_response = client.post('/words/create_word/', json=data, headers=admin_token)
+    assert create_response.status_code == 201
+    word_id = create_response.json()['word_id'][0]
+
+    update_data = {}
+    response = client.patch(f'/words/edit/{word_id}', json=update_data, headers=admin_token)
+    word = db_session.query(Word).filter(Word.word_id == word_id).first()
+    print('PRINT DO TESTE TEST_EDIT_WORD_MISSING_VALUES ⬇')
+    print(response.status_code, response.json())
+    assert response.status_code == 422
+    assert response.json()['detail'][0]['msg'] == 'Field required'
+    assert response.json()['detail'][1]['msg'] == 'Field required'
+    assert word.word == 'palavra'
+    assert word.meaning != 'significado atualizado'
+    assert word.meaning == 'qualquer coisa'
+    assert word.example is None
+
+
+def test_edit_word_word_not_found(client, admin_token):
+    update_data = {
+        'word': 'palavra',
+        'meaning': 'significado atualizado',
+        'example': 'isso é uma palavra'
+    }
+    response = client.patch(f'/words/edit/1', json=update_data, headers=admin_token)
+    print('PRINT DO TESTE TEST_EDIT_WORD_WORD_NOT_FOUND ⬇')
+    print(response.status_code, response.json())
+    assert response.status_code == 404
+    assert response.json() == {'detail': 'Word not found'}
+
+
+def test_edit_word_timestamp_updates(client, admin_token, db_session):
+    data = {
+        'word': 'palavra',
+        'meaning': 'qualquer coisa'
+    }
+    create_response = client.post('/words/create_word/', json=data, headers=admin_token)
+    assert create_response.status_code == 201
+    word_id = create_response.json()['word_id'][0]
+    word = db_session.query(Word).filter(Word.word_id == word_id).first()
+    initial_updated_at = word.created_at
+    import time
+    time.sleep(0.10)
+
+    update_data = {
+        'word': 'nova palavra',
+        'meaning': 'qualquer sentido',
+        'example': 'isso é uma palavra'
+    }
+    
+    response = client.patch(f'/words/edit/{word_id}', json=update_data, headers=admin_token)
+    db_session.refresh(word)
+    print('PRINT DO TESTE TEST_EDIT_WORD_TIMESTAMP_UPDATES ⬇')
+    print(response.status_code, response.json())
+    assert word.updated_at < initial_updated_at

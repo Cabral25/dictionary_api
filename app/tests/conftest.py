@@ -49,19 +49,19 @@ def db_session():
 
 @pytest.fixture
 def db_session_no_savepoint():
-    connection = engine_test.connect()
-    transaction = connection.begin()
+    # connection = engine_test.connect()
+    # transaction = connection.begin()
 
-    session = TestingSessionLocal(bind=connection)
+    # session = TestingSessionLocal(bind=connection)
 
-    yield session
+    # yield session
 
     print('Closing session')
-    session.close()
+    # session.close()
     print('Destroying database data...')
-    transaction.rollback()
+    # transaction.rollback()
     print('Closing connection...')
-    connection.close()
+    # connection.close()
     print('Done')
 
 
@@ -72,11 +72,11 @@ def clean_db(db_session, request):
         db_session.commit()
 
 
-@pytest.fixture(autouse=True)
-def clean_db_no_savepoint(db_session_no_savepoint, request):
-    if 'no_clean' not in request.keywords:
-        db_session_no_savepoint.execute(text('TRUNCATE TABLE words, users RESTART IDENTITY CASCADE;'))
-        db_session_no_savepoint.commit()
+# @pytest.fixture(autouse=True)
+# def clean_db_no_savepoint(db_session_no_savepoint, request):
+    # if 'no_clean' not in request.keywords:
+        # db_session_no_savepoint.execute(text('TRUNCATE TABLE words, users RESTART IDENTITY CASCADE;'))
+        # db_session_no_savepoint.commit()
 
 
 @pytest.fixture
@@ -110,13 +110,13 @@ def client_no_savepoint(db_session_no_savepoint):
     def override_rate_limiter():
         return None
 
-    app.dependency_overrides[get_db] = override_get_db
-    app.dependency_overrides[rate_limiter] = override_rate_limiter
+    # app.dependency_overrides[get_db] = override_get_db
+    # app.dependency_overrides[rate_limiter] = override_rate_limiter
 
-    client = TestClient(app)
-    yield client
+    # client = TestClient(app)
+    # yield client
 
-    app.dependency_overrides.clear()
+    # app.dependency_overrides.clear()
 
 
 @pytest.fixture # <-- needs refactoring
