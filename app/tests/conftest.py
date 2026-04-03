@@ -28,13 +28,13 @@ def db_session():
     session = TestingSessionLocal(bind=connection)
 
     # cria SAVEPOINT
-    session.begin_nested()
+    """session.begin_nested()
 
     # garante que cada commit cria novo SAVEPOINT
     @event.listens_for(session, 'after_transaction_end')
     def restart_savepoint(sess, trans):
         if not trans.nested:
-            sess.begin_nested()
+            sess.begin_nested()"""
 
     yield session
 
@@ -80,7 +80,7 @@ def clean_db(db_session, request):
 
 
 @pytest.fixture
-def client(db_session):
+def client(db_session, request):
 
     def override_get_db():
         print('Override ativo', end=', ')
@@ -91,7 +91,9 @@ def client(db_session):
         return None
 
     app.dependency_overrides[get_db] = override_get_db
-    app.dependency_overrides[rate_limiter] = override_rate_limiter
+
+    if 'override_rate_limiter' not in request.keywords:
+        app.dependency_overrides[rate_limiter] = override_rate_limiter
 
     client = TestClient(app)
     yield client
