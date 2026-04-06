@@ -1,0 +1,44 @@
+
+services: # Define os containers que fazem parte do sistema
+
+  db: # container do banco de dados
+    image: postgres:16
+    container_name: dictionary_api_db_container
+    env_file:
+      - app/.env
+    # Funciona como um HD externo conectado a esse container,
+    # ideal para persistir os dados do meu banco de dados
+    # mesmo que o container seja desfeito
+    volumes: # <-- named volume
+        # /var/lib/postgresql/data existe dentro da imagem oficial do postgresql.
+        # É uma pasta padrão que o postgres espera usar. O banco é salvo aqui.
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  fast_api: # Container da API. Geralmente chamado web (por que expôe a aplicação web),
+            # mas pode ser chamado de qualquer coisa, no caso estou chamando de fast_api.
+    build: .
+    container_name: dictionary_api_container
+    command: uvicorn main:app --reload --port 8003
+    volumes: # <-- bind mount
+        # Espelha o meu código dentro do container, em que eu
+        # uso a pasta manga_reader_api dentro do container. Se eu
+        # mudo o código no computador, ele muda no container e vice-versa.
+      - .:/dictionary_api
+    ports:
+      - '8003:8003'
+    env_file:
+      - app/.env
+    depends_on:
+      - db
+
+
+# Declarando e criando o volume postgres_data. O volume no
+# serviço db só poderá ser USADO dentro do serviço db quando o 
+# volume for declarado e criado.
+volumes:
+  postgres_data:
+
+# ps: apenas named volumes precisam ser declarados, o volume
+# da aplicação web é um bind mount, então não precisa ser declarado.
