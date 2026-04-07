@@ -2,12 +2,12 @@ import pytest
 from fastapi.testclient import TestClient
 from .config import engine_test, TestingSessionLocal
 from ..main import app
-from dependencies import get_db
-from rate_limit import rate_limiter
+from app.dependencies import get_db
+from app.rate_limit import rate_limiter
 import uuid
-from models import Word, User
+from app.models import Word, User
 from sqlalchemy import event, text
-from database import Base
+from app.database import Base
 
 
 @pytest.fixture(scope='session', autouse=True)

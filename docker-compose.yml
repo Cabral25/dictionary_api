@@ -20,7 +20,7 @@ services: # Define os containers que fazem parte do sistema
             # mas pode ser chamado de qualquer coisa, no caso estou chamando de fast_api.
     build: .
     container_name: dictionary_api_container
-    command: uvicorn main:app --reload --port 8003
+    command: uvicorn app.main:app --reload --port 8003
     volumes: # <-- bind mount
         # Espelha o meu código dentro do container, em que eu
         # uso a pasta manga_reader_api dentro do container. Se eu

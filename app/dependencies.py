@@ -2,9 +2,9 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from sqlalchemy.orm import Session
-from database import SessionLocal
-from models import User
-from auth import SECRET_KEY, ALGORITHM
+from app.database import SessionLocal
+from app.models import User
+from app.auth import SECRET_KEY, ALGORITHM
 
 # o OAuth2PasswordBearer é um helper do fastapi que faz duas coisas:
 # ° Lê e retorna o token do header de requisição

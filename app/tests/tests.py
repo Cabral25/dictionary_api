@@ -54,6 +54,7 @@ def test_words_list_rate_limiter_works(client):
 
     response = client.get('/words/list_words/')
     assert response.status_code == 429
+    assert response.json() == {'detail': 'Too many requests'}
 
 
 
