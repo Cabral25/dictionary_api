@@ -48,10 +48,3 @@ def admin_required(user: User = Depends(get_current_user)):
     if not user.is_admin:
         raise HTTPException(status_code=403, detail='Not authorized')
     return user
-
-
-def admin_required2(token: str = Depends(oauth2_scheme)):
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    if not payload['is_admin']:
-        raise HTTPException(status_code=403, detail='Not authorized')
-    return True

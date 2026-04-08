@@ -5,8 +5,7 @@ from ..main import app
 from app.dependencies import get_db
 from app.rate_limit import rate_limiter
 import uuid
-from app.models import Word, User
-from sqlalchemy import event, text
+from sqlalchemy import text
 from app.database import Base
 
 
@@ -14,10 +13,8 @@ from app.database import Base
 def create_table():
     """Cria as tabelas no banco de dados"""
     Base.metadata.create_all(bind=engine_test)
-    print('As tabelas foram criadas')
     yield
     Base.metadata.drop_all(bind=engine_test)
-    print('As tabelas foram destruídas')
 
 
 @pytest.fixture
@@ -47,23 +44,6 @@ def db_session():
     print('Done')
 
 
-@pytest.fixture
-def db_session_no_savepoint():
-    # connection = engine_test.connect()
-    # transaction = connection.begin()
-
-    # session = TestingSessionLocal(bind=connection)
-
-    # yield session
-
-    print('Closing session')
-    # session.close()
-    print('Destroying database data...')
-    # transaction.rollback()
-    print('Closing connection...')
-    # connection.close()
-    print('Done')
-
 
 @pytest.fixture(autouse=True)
 def clean_db(db_session, request):
@@ -72,19 +52,11 @@ def clean_db(db_session, request):
         db_session.commit()
 
 
-# @pytest.fixture(autouse=True)
-# def clean_db_no_savepoint(db_session_no_savepoint, request):
-    # if 'no_clean' not in request.keywords:
-        # db_session_no_savepoint.execute(text('TRUNCATE TABLE words, users RESTART IDENTITY CASCADE;'))
-        # db_session_no_savepoint.commit()
-
 
 @pytest.fixture
 def client(db_session, request):
 
     def override_get_db():
-        print('Override ativo', end=', ')
-        print('Banco do db_session: ', db_session.bind.engine.url)
         yield db_session
 
     def override_rate_limiter():
@@ -100,25 +72,6 @@ def client(db_session, request):
 
     app.dependency_overrides.clear()
 
-
-@pytest.fixture
-def client_no_savepoint(db_session_no_savepoint):
-
-    def override_get_db():
-        print('Override ativo', end=', ')
-        print('Banco do db_session: ', db_session.bind.engine.url)
-        yield db_session_no_savepoint
-
-    def override_rate_limiter():
-        return None
-
-    # app.dependency_overrides[get_db] = override_get_db
-    # app.dependency_overrides[rate_limiter] = override_rate_limiter
-
-    # client = TestClient(app)
-    # yield client
-
-    # app.dependency_overrides.clear()
 
 
 @pytest.fixture # <-- needs refactoring
@@ -140,8 +93,6 @@ def admin_token(client: TestClient):
 
     # login
     response = client.post('/users/login', data={'username': username, 'password': password, 'grant_type': 'password'})
-    # print(response.status_code)
-    # print(response.json())
     token = response.json()['access_token']
 
     return {'Authorization': f'Bearer {token}'}
@@ -166,8 +117,6 @@ def admin_token_not_admin(client: TestClient):
 
     # login
     response = client.post('/users/login', data={'username': username, 'password': password, 'grant_type': 'password'})
-    # print(response.status_code)
-    # print(response.json())
     token = response.json()['access_token']
 
     return {'Authorization': f'Bearer {token}'}
@@ -186,8 +135,5 @@ def create_words(client: TestClient, admin_token):
                 },
                 headers=admin_token
             )
-            print('PRINT DA FIXTURE CREATE_WORDS ⬇')
-            print(f'word: {i}, status code: {res.status_code}, json: {res.json()}')
             assert res.status_code in (200, 201), res.json()
-        print('url do banco:', engine_test.url)
     return create

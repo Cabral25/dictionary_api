@@ -18,8 +18,6 @@ router = APIRouter(prefix='/words')
     dependencies=[Depends(rate_limiter)]
 )
 def list_words(page: int = Query(1, gt=0), db: Session = Depends(get_db)):
-    print('PRINT DA ENDPOINT LIST_WORDS ⬇')
-    print('Banco usado: ', db.bind.engine.url)
     limit = 5
     offset = (page - 1) * limit
     words = db.query(Word).order_by(Word.word_id).offset(offset).limit(limit).all()

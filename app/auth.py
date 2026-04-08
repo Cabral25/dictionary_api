@@ -158,12 +158,3 @@ def create_access_token(data: dict):
     expire = datetime.now(timezone.utc) + timedelta(minutes=float(ACCESS_TOKENS_EXPIRE_MINUTES))
     to_encode.update({'exp': expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-teste = hash_password('senha123')
-print(teste)
-# $argon2id$v=19$m=65536,t=3,p=4$wbE2P3FcFqnQwybsiwE75A$Jtnfp2vitZDnSaFESJQUcGgsJIyoLH1ddlf4xTU6zXg
-
-testejwt = create_access_token({'teste': True})
-print(f'token gerado: {testejwt}')
-# token gerado: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZXN0ZSI6dHJ1ZSwiZXhwIjoxNzczNjg4OTEyfQ.kpHk_IfZGQEMoui4WO8cjqbAPdfd0QtSdVVY-5v6DZ8
