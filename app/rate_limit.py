@@ -1,5 +1,8 @@
 import time
+import os
+import uuid
 from fastapi import Request, HTTPException
+from redis.asyncio import Redis
 
 
 REQUEST_LIMIT = 5
@@ -8,8 +11,7 @@ WINDOW_SECONDS = 60
 requests = {}
 
 
-async def rate_limiter(request: Request):
-    """Limita as requisições a 5 por minuto."""
+"""async def rate_limiter(request: Request):
     ip = request.client.host
     now = time.time()
 
@@ -20,4 +22,27 @@ async def rate_limiter(request: Request):
         raise HTTPException(status_code=429, detail='Too many requests')
 
     timestamps.append(now)
-    requests[ip] = timestamps
+    requests[ip] = timestamps"""
+
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+REDIS_DB = int(os.getenv('REDIS_DB', 0))
+
+redis_client = Redis(host=REDIS_HOST, port=REDIS_DB, decode_responses=True)
+
+async def rate_limiter(request: Request):
+    ip = request.client.host
+    key = f'rate_limit: {ip}'
+    now = int(time.time())
+    member = f'{now}-{uuid.uuid4().hex}'
+
+    pipeline = redis_client.pipeline()
+    pipeline.zremrangebyscore(key, 0, now - WINDOW_SECONDS)
+    pipeline.zadd(key, {member: now})
+    pipeline.zcard(key)
+    pipeline.expire(key, WINDOW_SECONDS + 1)
+    _, _, count, _ = await pipeline.execute()
+
+    if count > REQUEST_LIMIT:
+        raise HTTPException(status_code=429, detail='Too many requests')

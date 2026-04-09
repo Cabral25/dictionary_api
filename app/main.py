@@ -14,7 +14,7 @@ app.include_router(words.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'], # adicionar uma origem válida mais tarde
+    allow_origins=['http://localhost:8003'], # adicionar uma origem válida mais tarde
     allow_credentials=True,
     allow_methos=['*'],
     allow_headers=['*'],
