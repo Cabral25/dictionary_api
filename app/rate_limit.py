@@ -3,6 +3,9 @@ import os
 import uuid
 from fastapi import Request, HTTPException
 from redis.asyncio import Redis
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 REQUEST_LIMIT = 5
@@ -29,11 +32,11 @@ REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 REDIS_DB = int(os.getenv('REDIS_DB', 0))
 
-redis_client = Redis(host=REDIS_HOST, port=REDIS_DB, decode_responses=True)
+redis_client = Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
 
 async def rate_limiter(request: Request):
     ip = request.client.host
-    key = f'rate_limit: {ip}'
+    key = f'rate_limit:{ip}'
     now = int(time.time())
     member = f'{now}-{uuid.uuid4().hex}'
 

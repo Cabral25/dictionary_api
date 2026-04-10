@@ -2,11 +2,11 @@ import pytest
 from fastapi.testclient import TestClient
 from .config import engine_test, TestingSessionLocal
 from ..main import app
-from app.dependencies import get_db
-from app.rate_limit import rate_limiter
+from dependencies import get_db
+from rate_limit import rate_limiter
 import uuid
 from sqlalchemy import text
-from app.database import Base
+from database import Base
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -137,3 +137,8 @@ def create_words(client: TestClient, admin_token):
             )
             assert res.status_code in (200, 201), res.json()
     return create
+
+@pytest.fixture
+def create_app():
+    "Retorna app sem overrides para testes reais"
+    return app

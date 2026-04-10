@@ -1,7 +1,9 @@
 from fastapi.testclient import TestClient
-from .conftest import client, admin_token, admin_token_not_admin, db_session, client_no_savepoint
+from httpx import AsyncClient
+from .conftest import client, admin_token, admin_token_not_admin, db_session, create_app
 from models import Word
 import pytest
+
 
 
 
@@ -48,14 +50,26 @@ def test_invalid_page(client):
 
 @pytest.mark.override_rate_limiter
 def test_words_list_rate_limiter_works(client):
-    for i in range(5):
+    from unittest.mock import MagicMock, patch, AsyncMock
+
+    with patch('rate_limit.redis_client', new_callable=MagicMock) as mock_redis:
+        mock_pipeline = MagicMock()
+        mock_redis.pipeline.return_value = mock_pipeline
+
+        mock_pipeline.zremrangebyscore.return_value = mock_pipeline
+        mock_pipeline.zadd.return_value = mock_pipeline
+        mock_pipeline.zcard.return_value = mock_pipeline
+        mock_pipeline.expire.return_value = mock_pipeline
+
+        mock_pipeline.execute = AsyncMock(return_value=(None, None, 1, None))
+        for i in range(5):
+            response = client.get('/words/list_words/')
+            assert response.status_code == 200
+        
+        mock_pipeline.execute = AsyncMock(return_value=(None, None, 6, None))
         response = client.get('/words/list_words/')
-        assert response.status_code == 200
-
-    response = client.get('/words/list_words/')
-    assert response.status_code == 429
-    assert response.json() == {'detail': 'Too many requests'}
-
+        assert response.status_code == 429
+        assert response.json() == {'detail': 'Too many requests'}
 
 
 # Testes da endpoint create_word
